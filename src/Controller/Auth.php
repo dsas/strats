@@ -54,4 +54,10 @@ class Auth
 
         throw new NotFoundHttpException();
     }
+
+    public function logout(Request $request)
+    {
+        $request->getSession()->invalidate();
+        return new RedirectResponse('/');
+    }
 }

@@ -33,12 +33,14 @@ $app['strava.auth'] = $app->share(function () use ($app) {
 $app['controller.auth'] = $app->share(function () use ($app) {
     return new Strats\Controller\Auth($app['strava.auth'], $app['strava.client']);
 });
-$app->get('/', "controller.auth:login");
-$app->get('/callback', "controller.auth:callback");
 
 $app['controller.asr'] = $app->share(function () use ($app) {
     return new Strats\Controller\ActivitySegmentRanking($app['strava.client']);
 });
+
+$app->get('/', "controller.auth:login")->bind('login');
+$app->get('/logout', "controller.auth:logout")->bind('logout');
+$app->get('/callback', "controller.auth:callback");
 $app->get('/activity-ranking', "controller.asr:activityRanking");
 
 $app->run();
