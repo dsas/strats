@@ -1,0 +1,16 @@
+{% extends "base.twig" %}
+
+{% block title %}
+    Segment comparison for activity
+{% endblock %}
+
+{% block content %}
+    {% for segment_id, efforts in activity_segments %}
+        <h2>{{ segment_id }}</h2>
+        <ul>
+            {% for effort in efforts %}
+            <li>{{ effort.athlete_id }} did it in {{ effort.duration }} seconds</li>
+           {% endfor %}
+       </ul>
+    {% endfor %}
+{% endblock %}

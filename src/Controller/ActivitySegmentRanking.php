@@ -10,9 +10,12 @@ class ActivitySegmentRanking
 {
     private $strava;
 
-    public function __construct(Client $strava)
+    private $twig;
+
+    public function __construct(Client $strava, \Twig_Environment $twig)
     {
         $this->strava = $strava;
+        $this->twig = $twig;
     }
 
     /**
@@ -62,16 +65,8 @@ class ActivitySegmentRanking
             }
             unset($segment_efforts);
         }
-        $out = '';
-        foreach ($data as $segment_id => $segment_efforts) {
-            $out .= "<h2>$segment_id</h2><ol>";
-            foreach ($segment_efforts as $effort) {
-                $out .= "<li>";
-                $out .= $effort['athlete_id'] . " did it in " . $effort['duration'];
-                $out .= "</li>";
-            }
-            $out .= "</ol>";
-        }
+
+        $out = $this->twig->render('ActivitySegmentRanking.twig', ['activity_segments' => $data]);
         $response = new Response($out);
         return $response;
     }

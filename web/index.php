@@ -1,5 +1,10 @@
 <?php
 
+$filename = __DIR__.preg_replace('#(\?.*)$#', '', $_SERVER['REQUEST_URI']);
+if (php_sapi_name() === 'cli-server' && is_file($filename)) {
+    return false;
+}
+
 require_once __DIR__.'/../vendor/autoload.php';
 
 $app = new Silex\Application();
@@ -10,9 +15,14 @@ $app->register(new Silex\Provider\MonologServiceProvider(), array(
     'monolog.logfile' => __DIR__.'/../app.log',
     'monolog.name' => 'strats',
 ));
-
 $app['monolog']->addDebug('Debug mode is ' . $app['debug']);
 
+$app->register(new Silex\Provider\TwigServiceProvider(), [
+    'twig.path' => __DIR__ .'/../views',
+    'twig.options' => ['debug' => $app['debug'],],
+]);
+
+$app->register(new Silex\Provider\UrlGeneratorServiceProvider());
 $app->register(new Silex\Provider\ServiceControllerServiceProvider());
 $app->register(new Silex\Provider\SessionServiceProvider());
 
@@ -35,10 +45,10 @@ $app['controller.auth'] = $app->share(function () use ($app) {
 });
 
 $app['controller.asr'] = $app->share(function () use ($app) {
-    return new Strats\Controller\ActivitySegmentRanking($app['strava.client']);
+    return new Strats\Controller\ActivitySegmentRanking($app['strava.client'], $app['twig']);
 });
 
-$app->get('/', "controller.auth:login")->bind('login');
+$app->get('/', "controller.auth:login")->bind('home');
 $app->get('/logout', "controller.auth:logout")->bind('logout');
 $app->get('/callback', "controller.auth:callback");
 $app->get('/activity-ranking', "controller.asr:activityRanking");
