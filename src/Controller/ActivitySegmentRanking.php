@@ -27,57 +27,55 @@ class ActivitySegmentRanking
      */
     public function activityRanking(Request $request)
     {
-        if ($request->getSession()->get('strava_oauth_token')) {
-            $athlete = $this->strava->getAthlete();
-            // TODO: Allow a particular activity to be chosen
-            $summary = array_pop($this->strava->getAthleteActivities(null, null, null, 1));
-            $detail = $this->strava->getActivity($summary['id']);
-            $data = [];
-            foreach ($detail['segment_efforts'] as $effort) {
-                $segment_id = $effort['segment']['id'];
-                $segment_name = $effort['name'];
-                $effort = $this->extractEffortDetails($effort);
-                $effort['athlete_name'] = $athlete['firstname'] . ' ' . $athlete['lastname'];
-                $data[$segment_id] = [
-                    'name' => $segment_name,
-                    'efforts' => [$effort],
-                ];
-            }
-
-            // 200 friends is enough for anyone...
-            $friends = $this->strava->getAthleteFriends(null, null, 200);
-            foreach ($friends as $friend) {
-                foreach (array_keys($data) as $segment_id) {
-                    $efforts = $this->strava->getSegmentEffort(
-                        $segment_id,
-                        $friend['id'],
-                        null,
-                        null,
-                        null,
-                        200
-                    );
-
-                    if (!$efforts) {
-                        continue;
-                    }
-
-                    // results already ordered by elapsed_time
-                    $fastest = $efforts[0];
-                    $fastest = $this->extractEffortDetails($fastest);
-                    $fastest['athlete_name'] = $friend['firstname'] . ' ' . $friend['lastname'];
-                    $data[$segment_id]['efforts'][] = $fastest;
-
-                    // TODO: The friends most recent would be interesting too.
-                }
-            }
-
-            foreach ($data as &$segment) {
-                foreach ($segment as &$segment_efforts) {
-                    usort($segment_efforts, [$this, 'sortSegmentEffortsByDuration']);
-                }
-            }
-            unset($segment_efforts);
+        $athlete = $this->strava->getAthlete();
+        // TODO: Allow a particular activity to be chosen
+        $summary = array_pop($this->strava->getAthleteActivities(null, null, null, 1));
+        $detail = $this->strava->getActivity($summary['id']);
+        $data = [];
+        foreach ($detail['segment_efforts'] as $effort) {
+            $segment_id = $effort['segment']['id'];
+            $segment_name = $effort['name'];
+            $effort = $this->extractEffortDetails($effort);
+            $effort['athlete_name'] = $athlete['firstname'] . ' ' . $athlete['lastname'];
+            $data[$segment_id] = [
+                'name' => $segment_name,
+                'efforts' => [$effort],
+            ];
         }
+
+        // 200 friends is enough for anyone...
+        $friends = $this->strava->getAthleteFriends(null, null, 200);
+        foreach ($friends as $friend) {
+            foreach (array_keys($data) as $segment_id) {
+                $efforts = $this->strava->getSegmentEffort(
+                    $segment_id,
+                    $friend['id'],
+                    null,
+                    null,
+                    null,
+                    200
+                );
+
+                if (!$efforts) {
+                    continue;
+                }
+
+                // results already ordered by elapsed_time
+                $fastest = $efforts[0];
+                $fastest = $this->extractEffortDetails($fastest);
+                $fastest['athlete_name'] = $friend['firstname'] . ' ' . $friend['lastname'];
+                $data[$segment_id]['efforts'][] = $fastest;
+
+                // TODO: The friends most recent would be interesting too.
+            }
+        }
+
+        foreach ($data as &$segment) {
+            foreach ($segment as &$segment_efforts) {
+                usort($segment_efforts, [$this, 'sortSegmentEffortsByDuration']);
+            }
+        }
+        unset($segment_efforts);
 
         $out = $this->twig->render(
             'ActivitySegmentRanking.twig',

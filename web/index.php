@@ -49,8 +49,15 @@ $app['controller.asr'] = $app->share(function () use ($app) {
 });
 
 $app->get('/', "controller.auth:login")->bind('home');
+$require_login = function (Symfony\Component\HttpFoundation\Request $request) {
+    if (!$request->getSession()->get('strava_oauth_token')) {
+        return new Symfony\Component\HttpFoundation\RedirectResponse('/login');
+    }
+};
+
 $app->get('/logout', "controller.auth:logout")->bind('logout');
 $app->get('/callback', "controller.auth:callback");
-$app->get('/activity-ranking', "controller.asr:activityRanking");
+$app->get('/activity-ranking', "controller.asr:activityRanking")->bind('activity-ranking')
+    ->before($require_login);
 
 $app->run();
