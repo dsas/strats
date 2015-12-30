@@ -15,7 +15,7 @@ $app->register(new Silex\Provider\MonologServiceProvider(), array(
     'monolog.logfile' => __DIR__.'/../app.log',
     'monolog.name' => 'strats',
 ));
-$app['monolog']->addDebug('Debug mode is ' . $app['debug']);
+$app['logger']->addDebug('Debug mode is ' . $app['debug']);
 
 $app->register(new Silex\Provider\TwigServiceProvider(), [
     'twig.path' => __DIR__ .'/../views',
