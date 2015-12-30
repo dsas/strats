@@ -1,15 +1,17 @@
 {% extends "base.twig" %}
 
 {% block title %}
-    Segment comparison for activity
+    Segment comparison for {{ activity.name }}
+    ({{ activity.start_date | date('d/m/Y H:i')}})
 {% endblock %}
 
 {% block content %}
-    {% for segment_id, efforts in activity_segments %}
-        <h2>{{ segment_id }}</h2>
+    <h1>{{ activity.name }} ({{ activity.start_date | date('d/m/Y H:i')}})</h1>
+    {% for segment_id, seg_data in activity_segments %}
+        <h2>{{ seg_data.name }}</h2>
         <ul>
-            {% for effort in efforts %}
-            <li>{{ effort.athlete_id }} did it in {{ effort.duration }} seconds</li>
+            {% for effort in seg_data.efforts %}
+            <li>{{ effort.athlete_name }} has a PB of {{ effort.duration }} seconds</li>
            {% endfor %}
        </ul>
     {% endfor %}
