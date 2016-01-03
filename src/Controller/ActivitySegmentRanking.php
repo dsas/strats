@@ -23,16 +23,21 @@ class ActivitySegmentRanking
      * There's already an API call for the leaderboard
      *
      * @param Request $request
+     * @param integer $activity_id Null to use most recent activity
      * @return Response
      */
-    public function activityRanking(Request $request)
+    public function activityRanking(Request $request, $activity_id = null)
     {
+        if ($activity_id === null) {
+            $summary = array_pop($this->strava->getAthleteActivities(null, null, null, 1));
+            $activity_id = $summary['id'];
+        }
+
         $athlete = $this->strava->getAthlete();
-        // TODO: Allow a particular activity to be chosen
-        $summary = array_pop($this->strava->getAthleteActivities(null, null, null, 1));
-        $detail = $this->strava->getActivity($summary['id']);
+
+        $activity = $this->strava->getActivity($activity_id);
         $data = [];
-        foreach ($detail['segment_efforts'] as $effort) {
+        foreach ($activity['segment_efforts'] as $effort) {
             $segment_id = $effort['segment']['id'];
             $segment_name = $effort['name'];
             $effort = $this->extractEffortDetails($effort);
@@ -71,15 +76,13 @@ class ActivitySegmentRanking
         }
 
         foreach ($data as &$segment) {
-            foreach ($segment as &$segment_efforts) {
-                usort($segment_efforts, [$this, 'sortSegmentEffortsByDuration']);
-            }
+            usort($segment['efforts'], [$this, 'sortSegmentEffortsByDuration']);
         }
         unset($segment_efforts);
 
         $out = $this->twig->render(
             'ActivitySegmentRanking.twig',
-            ['activity_segments' => $data, 'activity' => $summary,]
+            ['activity_segments' => $data, 'activity' => $activity,]
         );
         $response = new Response($out);
         return $response;
@@ -108,11 +111,17 @@ class ActivitySegmentRanking
      */
     private function sortSegmentEffortsByDuration($effort1, $effort2)
     {
+        if (!is_array($effort1)) {
+            throw new \InvalidArgumentException("\$effort1 is $effort1, array expected");
+        }
+        if (!is_array($effort2)) {
+            throw new \InvalidArgumentException("\$effort2 is $effort2, array expected");
+        }
+
         if ($effort1['duration'] == $effort2['duration']) {
             if ($effort1['start'] == $effort2['start']) {
                 return 0;
             }
-            return $effort1['duration'] > $effort2['duration'] ? 1 : -1;
         }
         return $effort1['duration'] > $effort2['duration'] ? 1 : -1;
     }

@@ -57,7 +57,8 @@ $require_login = function (Symfony\Component\HttpFoundation\Request $request) {
 
 $app->get('/logout', "controller.auth:logout")->bind('logout');
 $app->get('/callback', "controller.auth:callback");
-$app->get('/activity-ranking', "controller.asr:activityRanking")->bind('activity-ranking')
+$app->get('/activity-ranking/{activity_id}', "controller.asr:activityRanking")->bind('activity-ranking')
+    ->value('activity_id', null)
     ->before($require_login);
 
 $app->run();
