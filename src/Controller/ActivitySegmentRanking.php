@@ -57,8 +57,7 @@ class ActivitySegmentRanking
                     $friend['id'],
                     null,
                     null,
-                    null,
-                    200
+                    1
                 );
 
                 if (!$efforts) {
