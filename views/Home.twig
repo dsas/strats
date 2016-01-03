@@ -1,0 +1,17 @@
+{% extends "base.twig" %}
+
+{% block title %}
+    {{ athlete.firstname }} {{ athlete.lastname }}
+{% endblock %}
+
+{% block content %}
+    <h1>{{ athlete.firstname }} {{ athlete.lastname }}</h1>
+    <h2>Latest activities</h2>
+    <ol>
+    {% for activity in activities %}
+    <li>{{ activity.name }} <span class="activity-list-date">{{ activity.start_date | date('d/m/Y H:i') }}</span> <a href="{{ path('activity-ranking', {'activity_id': activity.id}) }}">Compare with friends</a></li>
+    {% else %}
+        <li>No activities</li>
+    {% endfor %}
+    </ol>
+{% endblock %}

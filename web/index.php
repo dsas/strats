@@ -40,6 +40,10 @@ $app['strava.auth'] = $app->share(function () use ($app) {
     return $auth;
 });
 
+$app['controller.home'] = $app->share(function () use ($app) {
+    return new Strats\Controller\Home($app['strava.client'], $app['twig']);
+});
+
 $app['controller.auth'] = $app->share(function () use ($app) {
     return new Strats\Controller\Auth($app['strava.auth'], $app['strava.client']);
 });
@@ -48,13 +52,15 @@ $app['controller.asr'] = $app->share(function () use ($app) {
     return new Strats\Controller\ActivitySegmentRanking($app['strava.client'], $app['twig']);
 });
 
-$app->get('/', "controller.auth:login")->bind('home');
 $require_login = function (Symfony\Component\HttpFoundation\Request $request) {
     if (!$request->getSession()->get('strava_oauth_token')) {
         return new Symfony\Component\HttpFoundation\RedirectResponse('/login');
     }
 };
 
+$app->get('/', "controller.home:index")->bind('home')
+                                       ->before($require_login);
+$app->get('/login', "controller.auth:login")->bind('login');
 $app->get('/logout', "controller.auth:logout")->bind('logout');
 $app->get('/callback', "controller.auth:callback");
 $app->get('/activity-ranking/{activity_id}', "controller.asr:activityRanking")->bind('activity-ranking')
