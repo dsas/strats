@@ -1,18 +1,33 @@
 {% extends "base.twig" %}
 
 {% block title %}
-    Segment comparison for {{ activity.name }}
+    {{ activity.name }} Leaderboards
     ({{ activity.start_date | date('d/m/Y H:i')}})
 {% endblock %}
 
 {% block content %}
-    <h1>{{ activity.name }} ({{ activity.start_date | date('d/m/Y H:i')}})</h1>
+    <h1>{{ activity.name }} ({{ activity.start_date | date('j M Y H:i')}})</h1>
     {% for segment_id, seg_data in activity_segments %}
-        <h2>{{ seg_data.name }}</h2>
-        <ul>
-            {% for effort in seg_data.efforts %}
-            <li>{{ effort.athlete_name }} has a PB of {{ effort.duration }} seconds</li>
-           {% endfor %}
-       </ul>
+        <table class="table table-striped table-hover">
+            <caption>{{ seg_data.name }}</caption>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Time</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for effort in seg_data.leaderboard.entries %}
+                    <tr>
+                        <td>{{ effort.rank }}</td>
+                        <td>{{ effort.athlete_name }}</td>
+                        <td>{{ effort.elapsed_time }} seconds</td>
+                        <td>{{ effort.start_date | date('j M Y') }}</td>
+                    </tr>
+                {% endfor %}
+            <tbody>
+        </table>
     {% endfor %}
 {% endblock %}

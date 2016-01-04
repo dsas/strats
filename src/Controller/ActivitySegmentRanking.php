@@ -19,8 +19,7 @@ class ActivitySegmentRanking
     }
 
     /**
-     * Outputs a league table for an athlete's friends using the last segments
-     * There's already an API call for the leaderboard
+     * Outputs a leaderboard for each of the segments in an activity
      *
      * @param Request $request
      * @param integer $activity_id Null to use most recent activity
@@ -39,45 +38,24 @@ class ActivitySegmentRanking
         $data = [];
         foreach ($activity['segment_efforts'] as $effort) {
             $segment_id = $effort['segment']['id'];
+
+            if (array_key_exists($segment_id, $data)) {
+                continue;
+            }
+
             $segment_name = $effort['name'];
-            $effort = $this->extractEffortDetails($effort);
-            $effort['athlete_name'] = $athlete['firstname'] . ' ' . $athlete['lastname'];
+
+            // This is the only bit in this class that is friend specfic, could easily make this configurable for
+            // different leaderboards
+            $leaderboard = $this->strava->getSegmentLeaderboard($segment_id, null, null, null, true);
+
+            $leaderboard = $this->insertActivityeffort($leaderboard, $effort, $athlete);
+
             $data[$segment_id] = [
                 'name' => $segment_name,
-                'efforts' => [$effort],
+                'leaderboard' => $leaderboard,
             ];
         }
-
-        // 200 friends is enough for anyone...
-        $friends = $this->strava->getAthleteFriends(null, null, 200);
-        foreach ($friends as $friend) {
-            foreach (array_keys($data) as $segment_id) {
-                $efforts = $this->strava->getSegmentEffort(
-                    $segment_id,
-                    $friend['id'],
-                    null,
-                    null,
-                    1
-                );
-
-                if (!$efforts) {
-                    continue;
-                }
-
-                // results already ordered by elapsed_time
-                $fastest = $efforts[0];
-                $fastest = $this->extractEffortDetails($fastest);
-                $fastest['athlete_name'] = $friend['firstname'] . ' ' . $friend['lastname'];
-                $data[$segment_id]['efforts'][] = $fastest;
-
-                // TODO: The friends most recent would be interesting too.
-            }
-        }
-
-        foreach ($data as &$segment) {
-            usort($segment['efforts'], [$this, 'sortSegmentEffortsByDuration']);
-        }
-        unset($segment_efforts);
 
         $out = $this->twig->render(
             'ActivitySegmentRanking.twig',
@@ -88,40 +66,58 @@ class ActivitySegmentRanking
     }
 
     /**
-     * Cuts down segment efforts to just the necessary attribs
-     * @param array $effort
-     * @return array
+     * Inserts this effort into the leaderboard at an appropriate-ish place
+     *
+     * Doesn't add this effort if it already exists
+     *
+     * @param array $leaderboard The leaderboard for a segment
+     * @param array $effort The segment effort to add, as retrieved from strava API
+     * @param array $athlete
      */
-    private function extractEffortDetails($effort)
+    private function insertActivityEffort($leaderboard, $effort, $athlete)
     {
-        return [
-            'effort_id' => $effort['id'],
-            'athlete_id' => $effort['athlete']['id'],
-            'duration' => $effort['elapsed_time'],
-            'start' => $effort['start_date_local'],
-        ];
-    }
+        $insert_at = null;
+        $rank = null;
+        foreach ($leaderboard['entries'] as $place => &$entry) {
+            if ($effort['id'] === $entry['effort_id']) {
+                return $leaderboard;   // This effort is already included, return early without changes
+            }
 
-    /**
-     * Sorts segment efforts by duration then by start date
-     * @param array $effort1
-     * @param array $effort2
-     * @return integer
-     */
-    private function sortSegmentEffortsByDuration($effort1, $effort2)
-    {
-        if (!is_array($effort1)) {
-            throw new \InvalidArgumentException("\$effort1 is $effort1, array expected");
-        }
-        if (!is_array($effort2)) {
-            throw new \InvalidArgumentException("\$effort2 is $effort2, array expected");
-        }
+            if ($insert_at === null && $entry['elapsed_time'] >= $effort['elapsed_time']) {
+                $insert_at = $place;    // TODO: Not 100% correct - 2nd sort is start_date asc & this adds before
+                $rank = $entry['rank'];
+            }
 
-        if ($effort1['duration'] == $effort2['duration']) {
-            if ($effort1['start'] == $effort2['start']) {
-                return 0;
+            if ($insert_at !== null && $entry['elapsed_time'] != $effort['elapsed_time']) {
+                $entry['rank']++;
             }
         }
-        return $effort1['duration'] > $effort2['duration'] ? 1 : -1;
+
+        $effort_as_entry = [
+            "athlete_name" => $athlete['firstname'] . ' ' . $athlete['lastname'],
+            "athlete_id" => $athlete['id'],
+            "athlete_gender" => $athlete['sex'],
+            // Docs for activity doesn't mention hr or watts but says the effort is a effort summary which does
+            // the activity docs are correct.
+            "average_hr" => null,
+            "average_watts" => null,
+            "distance" => $effort['distance'],
+            "elapsed_time" => $effort['elapsed_time'],
+            "moving_time" => $effort['moving_time'],
+            "start_date" => $effort['start_date'],
+            "start_date_local" => $effort['start_date_local'],
+            "activity_id" => $effort['activity']['id'],
+            "effort_id" => $effort['id'],
+            "rank" => $rank,
+            "athlete_profile" => $athlete['profile'],
+        ];
+
+        if ($insert_at === null) {
+            $leaderboard['entries'][] = $effort_as_entry;
+        } else {
+            array_splice($leaderboard['entries'], $insert_at, 0, [$effort_as_entry]);
+        }
+
+        return $leaderboard;
     }
 }
