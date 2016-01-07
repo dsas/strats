@@ -57,6 +57,8 @@ class ActivitySegmentRanking
             ];
         }
 
+        $this->twig->addFilter(new \Twig_SimpleFilter('stravatime', [$this, 'formatStravaSeconds']));
+
         $out = $this->twig->render(
             'ActivitySegmentRanking.twig',
             ['activity_segments' => $data, 'activity' => $activity,]
@@ -119,5 +121,20 @@ class ActivitySegmentRanking
         }
 
         return $leaderboard;
+    }
+
+    public function formatStravaSeconds($seconds)
+    {
+        $hours = floor($seconds / 60 / 60);
+        $minutes = floor(($seconds - ($hours * 60 * 60)) / 60);
+        $seconds = $seconds - (($hours * 60 * 60) + ($minutes * 60));
+
+        if ($hours) {
+            return sprintf("%s:%s:%02s", $hours, $minutes, $seconds);
+        } elseif ($minutes) {
+            return sprintf("%s:%02s", $minutes, $seconds);
+        } else {
+            return "$seconds seconds";
+        }
     }
 }

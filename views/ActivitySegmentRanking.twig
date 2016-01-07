@@ -23,7 +23,7 @@
                     <tr>
                         <td>{{ effort.rank }}</td>
                         <td>{{ effort.athlete_name }}</td>
-                        <td>{{ effort.elapsed_time }} seconds</td>
+                        <td>{{ effort.elapsed_time | stravatime }}</td>
                         <td>{{ effort.start_date | date('j M Y') }}</td>
                     </tr>
                 {% endfor %}
