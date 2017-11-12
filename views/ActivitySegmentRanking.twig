@@ -20,7 +20,11 @@
             </thead>
             <tbody>
                 {% for effort in seg_data.leaderboard.entries %}
-                    <tr>
+                    {% if effort.activity_id == activity.id %}
+                        <tr class='this-activity'>
+                    {% else %}
+                        <tr>
+                    {% endif %}
                         <td>{{ effort.rank }}</td>
                         <td>{{ effort.athlete_name }}</td>
                         <td>{{ effort.elapsed_time | stravatime }}</td>
