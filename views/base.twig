@@ -24,7 +24,9 @@
 </head>
 
 <body>
-    {% include 'nav.twig' %}
+    {% if is_logged_in %}
+        {% include 'nav.twig' %}
+    {% endif %}
 
     <div class="container">
         {% block content %}{% endblock %}
