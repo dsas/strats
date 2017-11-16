@@ -22,6 +22,11 @@ $app->register(new Silex\Provider\TwigServiceProvider(), [
     'twig.options' => ['debug' => $app['debug'],],
 ]);
 
+$app->extend('twig', function ($twig, $app) {
+    $twig->addGlobal('is_logged_in', $app['session']->has('strava_oauth_token'));
+    return $twig;
+});
+
 $app->register(new Silex\Provider\UrlGeneratorServiceProvider());
 $app->register(new Silex\Provider\ServiceControllerServiceProvider());
 $app->register(new Silex\Provider\SessionServiceProvider());
