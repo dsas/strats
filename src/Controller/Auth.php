@@ -13,11 +13,13 @@ class Auth
 {
     private $oauth;
     private $strava;
+    private $twig;
 
-    public function __construct(OAuth $oauth, Client $strava)
+    public function __construct(OAuth $oauth, Client $strava, \Twig_Environment $twig)
     {
         $this->oauth = $oauth;
         $this->strava = $strava;
+        $this->twig = $twig;
     }
 
     public function login(Request $request)
@@ -27,7 +29,10 @@ class Auth
             $athlete = $this->strava->getAthlete();
             $out = print_r($athlete, true);
         } else {
-            $out = '<a href="'.$this->oauth->getAuthorizationUrl().'">connect</a>';
+            $out = $this->twig->render(
+                'Login.twig',
+                ['login_url' => $this->oauth->getAuthorizationUrl()]
+            );
         }
         $response = new Response($out);
         return $response;

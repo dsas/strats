@@ -50,7 +50,7 @@ $app['controller.home'] = $app->share(function () use ($app) {
 });
 
 $app['controller.auth'] = $app->share(function () use ($app) {
-    return new Strats\Controller\Auth($app['strava.auth'], $app['strava.client']);
+    return new Strats\Controller\Auth($app['strava.auth'], $app['strava.client'], $app['twig']);
 });
 
 $app['controller.asr'] = $app->share(function () use ($app) {
