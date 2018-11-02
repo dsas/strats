@@ -7,11 +7,23 @@
 {% block content %}
     <h1>{{ athlete.firstname }} {{ athlete.lastname }}</h1>
     <h2>Latest activities</h2>
-    <ol>
-    {% for activity in activities %}
-    <li>{{ activity.name }} <span class="activity-list-date">{{ activity.start_date | date('d/m/Y H:i') }}</span> <a href="{{ path('activity-ranking', {'activity_id': activity.id}) }}">Compare with friends</a></li>
-    {% else %}
-        <li>No activities</li>
-    {% endfor %}
-    </ol>
+    <table class="table table-striped">
+        <thead>
+            <th>Activity</th>
+            <th>Date</th>
+            <th></th>
+            <th></th>
+        <tbody>
+            {% for activity in activities %}
+                <tr>
+                    <td>{{ activity.name }}</td>
+                    <td><span class="activity-list-date">{{ activity.start_date | date('d/m/Y H:i') }}</span></td>
+                    <td><a href="{{ path('activity-ranking', {'activity_id': activity.id}) }}">Compare with friends</a></td>
+                    <td><a href="https://www.strava.com/activities/{{ activity.id }}">View on Strava</a></td>
+                </tr>
+            {% else %}
+                <li>No activities</li>
+            {% endfor %}
+        </tbody>
+    </table>
 {% endblock %}
