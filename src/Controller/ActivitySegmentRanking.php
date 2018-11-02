@@ -80,8 +80,13 @@ class ActivitySegmentRanking
     {
         $insert_at = null;
         $rank = null;
+
+        $athlete_name = $athlete['firstname'] . ' ' . mb_substr($athlete['lastname'], 0, 1) . '.';
         foreach ($leaderboard['entries'] as $place => &$entry) {
-            if ($effort['id'] === $entry['effort_id']) {
+            if ($effort['start_date'] === $entry['start_date'] &&
+                $athlete_name === $entry['athlete_name']) {
+
+                $entry['current_activity'] = true;
                 return $leaderboard;   // This effort is already included, return early without changes
             }
 
@@ -96,7 +101,7 @@ class ActivitySegmentRanking
         }
 
         $effort_as_entry = [
-            "athlete_name" => $athlete['firstname'] . ' ' . $athlete['lastname'],
+            "athlete_name" => $athlete_name,
             "athlete_id" => $athlete['id'],
             "athlete_gender" => $athlete['sex'],
             // Docs for activity doesn't mention hr or watts but says the effort is a effort summary which does
@@ -112,6 +117,7 @@ class ActivitySegmentRanking
             "effort_id" => $effort['id'],
             "rank" => $rank,
             "athlete_profile" => $athlete['profile'],
+            "current_activity" => true,
         ];
 
         if ($insert_at === null) {

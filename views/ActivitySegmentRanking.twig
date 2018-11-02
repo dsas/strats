@@ -20,7 +20,7 @@
             </thead>
             <tbody>
                 {% for effort in seg_data.leaderboard.entries %}
-                    {% if effort.activity_id == activity.id %}
+                    {% if effort.current_activity is defined and effort.current_activity == true%}
                         <tr class='info'>
                     {% else %}
                         <tr>
