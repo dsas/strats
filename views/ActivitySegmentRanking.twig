@@ -26,7 +26,13 @@
                         <tr>
                     {% endif %}
                         <td>{{ effort.rank }}</td>
-                        <td>{{ effort.athlete_name }}</td>
+                        <td
+                            {% if effort.current_athlete is defined and effort.current_athlete %}
+                                class="current_athlete"
+                            {% endif %}
+                        >
+                            {{ effort.athlete_name }}
+                        </td>
                         <td>{{ effort.elapsed_time | stravatime }}</td>
                         <td>{{ effort.start_date | date('j M Y') }}</td>
                     </tr>

@@ -83,8 +83,10 @@ class ActivitySegmentRanking
 
         $athlete_name = $athlete['firstname'] . ' ' . mb_substr($athlete['lastname'], 0, 1) . '.';
         foreach ($leaderboard['entries'] as $place => &$entry) {
-            if ($effort['start_date'] === $entry['start_date'] &&
-                $athlete_name === $entry['athlete_name']) {
+            $same_name = $athlete_name === $entry['athlete_name'];
+            $entry['current_athlete'] = $same_name;
+
+            if ($effort['start_date'] === $entry['start_date'] && $same_name) {
 
                 $entry['current_activity'] = true;
                 return $leaderboard;   // This effort is already included, return early without changes
@@ -118,6 +120,7 @@ class ActivitySegmentRanking
             "rank" => $rank,
             "athlete_profile" => $athlete['profile'],
             "current_activity" => true,
+            "current_athlete" => true,
         ];
 
         if ($insert_at === null) {
