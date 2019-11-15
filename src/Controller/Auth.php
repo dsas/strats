@@ -6,20 +6,19 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Strava\API\OAuth;
-use Strava\API\Client;
+use Iamstuartwilson\StravaApi;
 
 class Auth
 {
-    private $oauth;
     private $strava;
     private $twig;
+    private $redirectUrl;
 
-    public function __construct(OAuth $oauth, Client $strava, \Twig_Environment $twig)
+    public function __construct(StravaApi $strava, \Twig_Environment $twig, $redirectUrl)
     {
-        $this->oauth = $oauth;
         $this->strava = $strava;
         $this->twig = $twig;
+        $this->redirectUrl = $redirectUrl;
     }
 
     public function login(Request $request)
@@ -29,9 +28,16 @@ class Auth
             $athlete = $this->strava->getAthlete();
             $out = print_r($athlete, true);
         } else {
+            $twig_data = [
+                'login_url' => $this->strava->authenticationUrl(
+                    $this->redirectUrl,
+                    'auto',
+                    'activity:read_all'
+                )
+            ];
             $out = $this->twig->render(
                 'Login.twig',
-                ['login_url' => $this->oauth->getAuthorizationUrl()]
+                $twig_data
             );
         }
         $response = new Response($out);
@@ -42,10 +48,7 @@ class Auth
     {
         $auth_code = $request->query->get('code', false);
         if ($auth_code) {
-            $token = $this->oauth->getAccessToken(
-                'authorization_code',
-                ['code' => $auth_code]
-            );
+            $token = $this->strava->tokenExchange($auth_code);
             $request->getSession()->set('strava_oauth_token', $token);
             return new RedirectResponse('/');
         } else {

@@ -4,7 +4,7 @@ namespace Strats\Controller;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Strava\API\Client;
+use Iamstuartwilson\StravaApi;
 
 class Home
 {
@@ -12,7 +12,7 @@ class Home
 
     private $twig;
 
-    public function __construct(Client $strava, \Twig_Environment $twig)
+    public function __construct(StravaApi $strava, \Twig_Environment $twig)
     {
         $this->strava = $strava;
         $this->twig = $twig;
@@ -25,8 +25,8 @@ class Home
      */
     public function index(Request $request)
     {
-        $athlete = $this->strava->getAthlete();
-        $activities = $this->strava->getAthleteActivities();
+        $athlete = $this->strava->get('/athlete');
+        $activities = $this->strava->get('/athlete/activities');
 
         $out = $this->twig->render(
             'Home.twig',

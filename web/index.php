@@ -32,17 +32,17 @@ $app->register(new Silex\Provider\ServiceControllerServiceProvider());
 $app->register(new Silex\Provider\SessionServiceProvider());
 
 $app['strava.client'] = $app->share(function () use ($app) {
+    $api = new Iamstuartwilson\StravaApi(
+        $app['strava.auth.config']['clientId'],
+        $app['strava.auth.config']['clientSecret']
+    );
     $token = $app['session']->get('strava_oauth_token');
-    $adapter = new Pest('https://www.strava.com/api/v3');
-    $service = new Strava\API\Service\REST($token, $adapter);
-    $client = new Strava\API\Client($service);
-    return $client;
-});
-
-$app['strava.auth'] = $app->share(function () use ($app) {
-    $auth = new Strava\API\OAuth($app['strava.auth.config']);
-    $auth->setScopes(['public']);
-    return $auth;
+    $api->setAccessToken(
+        $token->access_token,
+        $token->refresh_token,
+        $token->expires_at
+    );
+    return $api;
 });
 
 $app['controller.home'] = $app->share(function () use ($app) {
@@ -50,7 +50,11 @@ $app['controller.home'] = $app->share(function () use ($app) {
 });
 
 $app['controller.auth'] = $app->share(function () use ($app) {
-    return new Strats\Controller\Auth($app['strava.auth'], $app['strava.client'], $app['twig']);
+    return new Strats\Controller\Auth(
+        $app['strava.client'],
+        $app['twig'],
+        $app['strava.auth.config']['redirectUri']
+    );
 });
 
 $app['controller.asr'] = $app->share(function () use ($app) {
