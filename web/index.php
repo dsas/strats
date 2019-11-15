@@ -1,24 +1,24 @@
 <?php
 
-$filename = __DIR__.preg_replace('#(\?.*)$#', '', $_SERVER['REQUEST_URI']);
+$filename = __DIR__ . preg_replace('#(\?.*)$#', '', $_SERVER['REQUEST_URI']);
 if (php_sapi_name() === 'cli-server' && is_file($filename)) {
     return false;
 }
 
-require_once __DIR__.'/../vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 $app = new Silex\Application();
 
-include_once __DIR__.'/../config.php';
+include_once __DIR__ . '/../config.php';
 
 $app->register(new Silex\Provider\MonologServiceProvider(), array(
-    'monolog.logfile' => __DIR__.'/../app.log',
+    'monolog.logfile' => __DIR__ . '/../app.log',
     'monolog.name' => 'strats',
 ));
 $app['logger']->addDebug('Debug mode is ' . $app['debug']);
 
 $app->register(new Silex\Provider\TwigServiceProvider(), [
-    'twig.path' => __DIR__ .'/../views',
+    'twig.path' => __DIR__ . '/../views',
     'twig.options' => ['debug' => $app['debug'],],
 ]);
 
