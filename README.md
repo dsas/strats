@@ -9,5 +9,8 @@ The "Activity Segment Ranker" allows you to view the friend leaderboard for all 
  5. Fill in the blanks in config.php.dist using the strava details
  6. Run composer install
 
+
+Or just [give it a try](https://strats.deansas.org/)
+
 # Status
 It does the above, it's not especially clean, it's not especially quick and it's not especially clever.
