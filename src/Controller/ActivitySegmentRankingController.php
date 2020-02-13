@@ -1,40 +1,44 @@
 <?php
 
-namespace Strats\Controller;
+namespace App\Controller;
 
+use Iamstuartwilson\StravaApi;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Iamstuartwilson\StravaApi;
+use Symfony\Component\Routing\Annotation\Route;
 
-class ActivitySegmentRanking
+class ActivitySegmentRankingController extends AbstractController
 {
-    private $strava;
-
-    private $twig;
-
-    public function __construct(StravaApi $strava, \Twig_Environment $twig)
-    {
-        $this->strava = $strava;
-        $this->twig = $twig;
-    }
-
     /**
      * Outputs a leaderboard for each of the segments in an activity
      *
+     * @Route("/activity-ranking/{activity_id}", name="activity", methods={"GET", "HEAD"})
      * @param Request $request
      * @param integer $activity_id Null to use most recent activity
      * @return Response
      */
-    public function activityRanking(Request $request, $activity_id = null)
+    public function activityRanking(Request $request, StravaApi $strava, $activity_id = null)
     {
+        $token = $request->getSession()->get('strava_oauth_token');
+        if ($token === null) {
+            return $this->redirectToRoute('login');
+        }
+
+        $strava->setAccessToken(
+            $token->access_token,
+            $token->refresh_token,
+            $token->expires_at
+        );
+
         if ($activity_id === null) {
-            $summary = array_pop($this->strava->get('/athlete/activities?oer_page=1'));
+            $activities = $strava->get('/athlete/activities?oer_page=1');
+            $summary = end($activities);
             $activity_id = $summary->id;
         }
 
-        $athlete = $this->strava->get('/athlete');
+        $athlete = $strava->get('/athlete');
 
-        $activity = $this->strava->get('/activities/' . $activity_id);
+        $activity = $strava->get('/activities/' . $activity_id);
         $data = [];
         foreach ($activity->segment_efforts as $effort) {
             $segment_id = $effort->segment->id;
@@ -47,7 +51,7 @@ class ActivitySegmentRanking
 
             // This is the only bit in this class that is friend specfic, could easily make this configurable for
             // different leaderboards
-            $leaderboard = $this->strava->get("/segments/${segment_id}/leaderboard?following=1");
+            $leaderboard = $strava->get("/segments/${segment_id}/leaderboard?following=1");
 
             $leaderboard = $this->insertActivityeffort($leaderboard, $effort, $athlete);
 
@@ -57,14 +61,10 @@ class ActivitySegmentRanking
             ];
         }
 
-        $this->twig->addFilter(new \Twig_SimpleFilter('stravatime', [$this, 'formatStravaSeconds']));
-
-        $out = $this->twig->render(
-            'ActivitySegmentRanking.twig',
+        return $this->render(
+            'ActivitySegmentRanking.html.twig',
             ['activity_segments' => $data, 'activity' => $activity,]
         );
-        $response = new Response($out);
-        return $response;
     }
 
     /**
@@ -129,20 +129,5 @@ class ActivitySegmentRanking
         }
 
         return $leaderboard;
-    }
-
-    public function formatStravaSeconds($seconds)
-    {
-        $hours = floor($seconds / 60 / 60);
-        $minutes = floor(($seconds - ($hours * 60 * 60)) / 60);
-        $seconds = $seconds - (($hours * 60 * 60) + ($minutes * 60));
-
-        if ($hours) {
-            return sprintf("%s:%s:%02s", $hours, $minutes, $seconds);
-        } elseif ($minutes) {
-            return sprintf("%s:%02s", $minutes, $seconds);
-        } else {
-            return "$seconds seconds";
-        }
     }
 }
