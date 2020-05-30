@@ -1,4 +1,4 @@
-{% extends "base.twig" %}
+{% extends "base.html.twig" %}
 
 {% block title %}
     {{ athlete.firstname }} {{ athlete.lastname }}
@@ -18,7 +18,7 @@
                 <tr>
                     <td>{{ activity.name }}</td>
                     <td><span class="activity-list-date">{{ activity.start_date | date('d/m/Y H:i') }}</span></td>
-                    <td><a href="{{ path('activity-ranking', {'activity_id': activity.id}) }}">Compare with friends</a></td>
+                    <td><a href="{{ path('activity', {'activity_id': activity.id}) }}">Compare with friends</a></td>
                     <td><a href="https://www.strava.com/activities/{{ activity.id }}">View on Strava</a></td>
                 </tr>
             {% else %}

@@ -7,10 +7,9 @@ The "Activity Segment Ranker" allows you to view the friend leaderboard for all 
 
 # Installation
  1. Clone the repository
- 2. Make the web directory web accessible
- 3. Copy config.php.dist to config.php
- 4. Register strava api keys on https://www.strava.com/settings/api
- 5. Fill in the blanks in config.php.dist using the strava details
+ 2. Make the public directory web accessible
+ 3. Register strava api keys on https://www.strava.com/settings/api
+ 4. Set environment variables for STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET using the values that Strava give you
  6. Run composer install
 
 
